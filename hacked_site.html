@@ -1,0 +1,58 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>HACKED BY GHOST</title>
+            <style>
+                body {
+                    background-color: black;
+                    color: #00FF00;
+                    font-family: 'Courier New', Courier, monospace;
+                    text-align: center;
+                    overflow: hidden;
+                }
+                h1 {
+                    font-size: 80px;
+                    text-shadow: 0 0 20px #00FF00;
+                    animation: glitch 1s infinite;
+                }
+                img {
+                    width: 200px;
+                    margin: 10px;
+                    opacity: 0.8;
+                }
+                .marquee {
+                    font-size: 40px;
+                    color: red;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    animation: marquee 10s linear infinite;
+                }
+                @keyframes glitch {
+                    0% { transform: translate(0) }
+                    20% { transform: translate(-2px, 2px) }
+                    40% { transform: translate(-2px, -2px) }
+                    60% { transform: translate(2px, 2px) }
+                    80% { transform: translate(2px, -2px) }
+                    100% { transform: translate(0) }
+                }
+                @keyframes marquee {
+                    0% { transform: translateX(100%); }
+                    100% { transform: translateX(-100%); }
+                }
+            </style>
+        </head>
+        <body>
+            <h1>YOU HAVE BEEN HACKED</h1>
+            <div class="marquee">CYBER SABOTAGE COMPLETE /// DATA WIPED /// SYSTEM DESTROYED ///</div>
+            <br><br>
+            <p>WE ARE WATCHING YOU.</p>
+            <script>
+                // 화면에 해골 이모지 도배
+                for(let i=0; i<100; i++) {
+                    document.write("<span style='font-size:50px; padding:10px;'>☠️</span>");
+                }
+            </script>
+        </body>
+        </html>
+        
