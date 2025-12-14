@@ -1,7 +1,13 @@
 import sys
 import time
 import os
-from config import Color
+from config import Color, AUDIO_AVAILABLE
+
+# Try importing pygame for type hinting mostly, actual check is via AUDIO_AVAILABLE
+try:
+    import pygame
+except ImportError:
+    pass
 
 def draw_ui_box(content_lines, title=" SYSTEM ", color=Color.GREEN):
     width = 65
@@ -44,6 +50,29 @@ def show_logo():
  |  _  // _ \ / _ \| __|    | |    / __|/ __/ _ \/ __| 
  | | \ \ (_) | (_) | |_     | |____\__ \ (_|  __/\__ \ 
  |_|  \_\___/ \___/ \__|    |______|___/\___\___||___/ 
-                                           v7.2
-        """ + Color.RESET)
-    print(f"{Color.CYAN}       Connection Established... Difficulty Selection.{Color.RESET}\n")
+                                           v8.0
+    """ + Color.RESET)
+    print(f"{Color.CYAN}       Connection Established... Target Acquired.{Color.RESET}\n")
+
+def init_audio():
+    sfx_success = None
+    if not AUDIO_AVAILABLE: 
+        return None
+    try:
+        pygame.mixer.init()
+        if os.path.exists("bgm.mp3"):
+            pygame.mixer.music.load("bgm.mp3")
+            pygame.mixer.music.set_volume(0.4)
+            pygame.mixer.music.play(-1)
+        if os.path.exists("success.wav"):
+            sfx_success = pygame.mixer.Sound("success.wav")
+            sfx_success.set_volume(0.6)
+    except: 
+        pass
+    return sfx_success
+
+def play_sfx(sfx_success, type="success"):
+    if AUDIO_AVAILABLE and sfx_success and type == "success":
+        sfx_success.play()
+    elif type == "alert": 
+        print('\a')
