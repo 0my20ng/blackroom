@@ -42,17 +42,22 @@ def process_command(game, user_input):
                 if target in game.machines:
                     for p in game.machines[target].ports: print(f"{Color.GREEN}[+] {p} open{Color.RESET}")
                 else: print("Error.")
-            else: print("Target unreachable.")
+
+        elif cmd == "analyze":
+            if arg1 == target and arg2:
+                loading_bar(0.8, "Analyzing")
+                print(f"{Color.GREEN}>> {game.machines[target].services.get(arg2, 'Unknown')}{Color.RESET}")
+            else: print("Usage: analyze [IP] [Port]")
 
         elif cmd == "web_scan":
-            if game.stage_idx == 0 and arg1 == target:
+            if game.stage_idx == 1 and arg1 == target:
                 loading_bar(1.0); print(f"{Color.GREEN}[+] Employee ID Found: dr_mario{Color.RESET}")
-            elif game.stage_idx == 1 and arg1 == target:
+            elif game.stage_idx == 2 and arg1 == target:
                 loading_bar(1.0); print(f"{Color.GREEN}[+] Key Found. Auto-Connecting...{Color.RESET}"); game.is_connected = True; game.current_vm = game.machines[target]; game.remote_user="www-data"; game.current_vm.cwd="/var/www/hidden"
             else: print("Nothing found.")
 
         elif cmd == "ftp":
-            if game.stage_idx == 0 and arg1 == target:
+            if game.stage_idx == 1 and arg1 == target:
                 print("Anonymous Login OK."); game.local_vm.files["/"]["id_rsa"] = "PRIVATE KEY"
                 print(">> 'id_rsa' Downloaded.")
             else: print("Refused.")
@@ -60,21 +65,23 @@ def process_command(game, user_input):
         elif cmd == "hydra":
             game.update_trace(5)
             if arg1 == "-l" and arg3:
-                if game.stage_idx == 0 and arg2 == "dr_mario":
+                if game.stage_idx == 1 and arg2 == "dr_mario":
                     loading_bar(1.5, "Brute-forcing"); print(f"{Color.GREEN}[SUCCESS] FTP Password: ftp_pass_123{Color.RESET}")
                 else: print("Failed.")
             else: print("Usage: hydra -l [ID] [IP]")
 
-        elif cmd == "hashcat": # Stage 1 unused logic in new flow but kept for consistency
-            print("No hash to crack in this stage.")
+        elif cmd == "hashcat":
+            if game.stage_idx == 1 and arg1 == "5f4dcc3b5aa765d61d8327deb882cf99":
+                loading_bar(2.0, "Cracking"); print(f"{Color.GREEN}[CRACKED] password{Color.RESET}")
+            else: print("Hash invalid or failed.")
 
         elif cmd == "searchsploit":
-            if game.stage_idx == 2 and "nginx" in str(arg1):
+            if game.stage_idx == 3 and "nginx" in str(arg1):
                 print(f"{Color.GREEN}[+] Exploit Found! Creds: admin / dragon123{Color.RESET}")
             else: print("No result.")
 
         elif cmd == "metasploit":
-            if game.stage_idx == 3:
+            if game.stage_idx == 4:
                 loading_bar(2.0, "Zero-Day"); print(f"{Color.GREEN}>> ROOT ACCESS{Color.RESET}"); game.is_connected = True; game.current_vm = game.machines[target]; game.remote_user="root"; game.current_vm.cwd="/root/secret"
             else: print("Not needed.")
 
@@ -83,7 +90,7 @@ def process_command(game, user_input):
                 print("Permissions set to 600 (User R/W only). Key is secure."); game.local_vm.file_perms["/id_rsa"] = "600"
             else: print("Usage: chmod 600 [file]")
 
-        elif cmd == "ssh": # Updated logic
+        elif cmd == "ssh":
             if arg1 == "-i" and arg2 == "id_rsa": # Key auth
                 parts_ip = arg3.split("@")
                 if len(parts_ip) > 1 and parts_ip[1] == target:
@@ -112,7 +119,7 @@ def process_command(game, user_input):
             print("PID\tPROCESS")
             for pid, name in game.current_vm.processes.items(): print(f"{pid}\t{name}")
         elif cmd == "kill":
-            if game.stage_idx == 1:
+            if game.stage_idx == 2:
                 pid = int(arg1)
                 if pid == 102:
                     print("Watchdog killed."); game.stage_flags['killed_watchdog'] = True
@@ -124,7 +131,7 @@ def process_command(game, user_input):
                 else: print("Bad PID.")
         
         elif cmd == "edit_log":
-            if game.stage_idx == 2:
+            if game.stage_idx == 3:
                 ip = input("Enter IP to frame: ")
                 if ip == "203.11.22.33":
                     print(">> Logs Framed."); game.stage_flags['framed_ip'] = True
@@ -132,7 +139,7 @@ def process_command(game, user_input):
             else: print("Logs cleared.")
 
         elif cmd == "grep":
-            if game.stage_idx == 3 and arg1 == "ledger" and arg2 == "*":
+            if game.stage_idx == 4 and arg1 == "ledger" and arg2 == "*":
                 print("Searching..."); time.sleep(1); print(f"{Color.GREEN}Match found: ledger_final_v2.xlsx{Color.RESET}")
             else: print("No matches.")
 
@@ -140,15 +147,15 @@ def process_command(game, user_input):
             if game.current_vm.get_file_content(arg1): print("Downloaded."); game.check_mission(arg1, "steal")
             else: print("File not found.")
         elif cmd == "decrypt":
-            if game.stage_idx == 1 and game.stage_flags['killed_locker']:
+            if game.stage_idx == 2 and game.stage_flags['killed_locker']:
                 print("Decrypted."); game.check_mission("patient_data.enc", "decrypt")
             else: print("Error or Daemon active.")
         elif cmd == "shred":
-            if game.stage_idx == 2 and game.stage_flags['framed_ip']:
+            if game.stage_idx == 3 and game.stage_flags['framed_ip']:
                 print("Shredding..."); game.check_mission(arg1, "shred")
             else: print("Error or Logs not framed.")
         elif cmd == "webcam_snap":
-            if game.stage_idx == 3: print("Captured."); game.check_mission("j.jpg", "webcam")
+            if game.stage_idx == 4: print("Captured."); game.check_mission("j.jpg", "webcam")
         
         else: print("Error.")
 
@@ -156,7 +163,7 @@ def sys_cmd(game, cmd, arg):
     vm = game.current_vm
     if cmd == "ls":
         f, d = vm.list_files()
-        if game.stage_idx == 3 and vm.cwd == "/root/secret":
+        if game.stage_idx == 4 and vm.cwd == "/root/secret":
             print("data_001.dat  data_002.dat ... (100 files) ... use 'grep' to find.")
         else:
             print("  ".join([f"{Color.BLUE}{x}/{Color.RESET}" for x in d] + f))

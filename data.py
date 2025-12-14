@@ -27,7 +27,13 @@ MANUAL = {
 }
 
 def setup_machines():
-    # 1. Stage 1 (BioTech) - Web info -> FTP -> SSH Key
+    # 0. Tutorial VM (Restored)
+    vm_tut = VirtualMachine("Test_Server", "10.0.0.1", 
+                            files={"/": {"hello.txt": "Welcome agent.", "j_memo.log": "Subject #404: Skill level low. Disposable asset."}},
+                            users={"guest": "1234"},
+                            ports=["22/tcp"], services={"22": "OpenSSH (Weak Password)"})
+
+    # 1. Stage 1 (BioTech)
     vm_bio = VirtualMachine("BioTech", "192.168.10.5",
                             files={
                                 "/": {"readme.txt": "FTP Server v2.0"}, 
@@ -38,18 +44,18 @@ def setup_machines():
                             ports=["21/tcp", "22/tcp", "80/tcp"], 
                             services={"21": "vsftpd", "22": "OpenSSH", "80": "Apache (Company Info)"})
     vm_bio.dirs["/"] = ["pub", "home"]; vm_bio.dirs["/home"] = ["dr_mario"]
-    vm_bio.file_perms["/pub/id_rsa"] = "644" # 권한 문제 발생 유도
+    vm_bio.file_perms["/pub/id_rsa"] = "644" 
 
-    # 2. Stage 2 (Ransom) - Process Puzzle
+    # 2. Stage 2 (Ransom)
     vm_ran = VirtualMachine("Ransom_C2", "45.33.22.11",
                             files={"/var/www/hidden": {
                                 "master_key.txt": "key: money_is_king",
                                 "patient_data.enc": "[LOCKED]"
                             }},
                             users={}, ports=["80/tcp"], services={"80": "Apache (Vuln)"},
-                            processes={101: "locker_daemon", 102: "watchdog_service"}) # 102 먼저 죽여야 함
+                            processes={101: "locker_daemon", 102: "watchdog_service"}) 
     
-    # 3. Stage 3 (CyberCloud) - Social Engineering & IP Frame
+    # 3. Stage 3 (CyberCloud)
     vm_cloud = VirtualMachine("CyberCloud", "10.20.30.40",
                               files={
                                   "/home/admin": {"source_code.zip": "Code", "server.log": "Access Log"},
@@ -59,20 +65,54 @@ def setup_machines():
                               ports=["22/tcp", "80/tcp"], services={"80": "nginx", "22": "OpenSSH"})
     vm_cloud.dirs["/"] = ["home", "var"]; vm_cloud.dirs["/home"] = ["admin"]; vm_cloud.dirs["/var"] = ["mail"]
 
-    # 4. Stage 4 (Apex) - Grep Puzzle
-    # 더미 파일 생성
+    # 4. Stage 4 (Apex)
     secret_files = {f"data_{i:03d}.dat": "Encrypted junk" for i in range(1, 100)}
-    secret_files["ledger_final_v2.xlsx"] = "J's Secret Ledger" # 진짜 파일
+    secret_files["ledger_final_v2.xlsx"] = "J's Secret Ledger"
     
     vm_apex = VirtualMachine("Apex_Main", "172.16.99.99",
                              files={"/root/secret": secret_files},
                              users={"root": "0day"},
                              ports=["Firewall"], services={"Firewall": "Active"})
     
-    return {"192.168.10.5": vm_bio, "45.33.22.11": vm_ran, "10.20.30.40": vm_cloud, "172.16.99.99": vm_apex}
+    # Return all machines
+    return {
+        "10.0.0.1": vm_tut,
+        "192.168.10.5": vm_bio, 
+        "45.33.22.11": vm_ran, 
+        "10.20.30.40": vm_cloud, 
+        "172.16.99.99": vm_apex
+    }
 
 def get_stages_info():
     return [
+        {
+            "target": "10.0.0.1", "goal": "hello.txt", "reward": 500, "name": "Tutorial",
+            "email_sub": "계약 시작: 접속 테스트",
+            "email_sender": "J (Broker)",
+            "beginner": """GHOST, 자네 실력을 봐야겠어. IP는 [10.0.0.1] 이다.
+1. 'nmap 10.0.0.1'을 입력해 **포트 번호**를 찾아내.
+2. 찾은 포트(22번)를 'analyze 10.0.0.1 22'로 분석해.
+3. 'ssh guest@10.0.0.1' (비번: 1234)로 접속해.
+4. 'scp hello.txt' 로 파일을 가져오면 합격이다.""",
+            "expert": """GHOST, 자네 이름값은 들었어. 
+내 개인 테스트 서버(10.0.0.1)에 'hello.txt' 파일을 놔뒀어.
+가져오게. 방법은 묻지 마. 포트 스캔부터 시작하게.""",
+            "news": ">> [속보] 다크웹 신규 해커 그룹 'GHOST', 활동 개시..."
+        },
+        {
+            "target": "10.0.0.1", "goal": "hello.txt", "reward": 500, "name": "Tutorial",
+            "email_sub": "계약 시작: 접속 테스트",
+            "email_sender": "J (Broker)",
+            "beginner": """GHOST, 자네 실력을 봐야겠어. IP는 [10.0.0.1] 이다.
+1. 'nmap 10.0.0.1'을 입력해 **포트 번호**를 찾아내.
+2. 찾은 포트(22번)를 'analyze 10.0.0.1 22'로 분석해.
+3. 'ssh guest@10.0.0.1' (비번: 1234)로 접속해.
+4. 'scp hello.txt' 로 파일을 가져오면 합격이다.""",
+            "expert": """GHOST, 자네 이름값은 들었어. 
+내 개인 테스트 서버(10.0.0.1)에 'hello.txt' 파일을 놔뒀어.
+가져오게. 방법은 묻지 마. 포트 스캔부터 시작하게.""",
+            "news": ">> [속보] 다크웹 신규 해커 그룹 'GHOST', 활동 개시..."
+        },
         {
             "target": "192.168.10.5", "goal": "formula_x.pdf", "reward": 2000, "name": "BioTech Theft",
             "email_sub": "계약 01: B사 신약 데이터",
@@ -80,9 +120,9 @@ def get_stages_info():
             "beginner": """B사(192.168.10.5)다. 3단계로 뚫어라.
 1. 'web_scan'으로 홈페이지를 털어서 직원 ID를 찾아내.
 2. 찾아낸 ID로 'hydra'를 써서 FTP 비밀번호를 크랙해.
-3. FTP에 접속해서 'id_rsa'(SSH 키)를 다운로드해.
-4. 중요: 다운받은 키는 권한이 너무 열려있으면 못 써. 'chmod 600 id_rsa'로 잠가.
-5. 'ssh -i id_rsa [ID]@192.168.10.5'로 접속해서 파일을 훔쳐.""",
+3. FTP에 접속해서 'id_rsa'(SSH í‚¤)를 ‹¤ìš´ë¡œë“œí•´.
+4. ì¤‘ìš”: ë‹¤ìš´ë°›ì € í‚¤ëŠ” ê¶Œí•œì ´ ë„ˆë¬´ ì—´ë ¤ìžˆìœ¼ë©´ ëª» ì ¨. 'chmod 600 id_rsa'ë¡œ ìž ê°€.
+5. 'ssh -i id_rsa [ID]@192.168.10.5'ë¡œ ì ‘ì† í•´ì„œ íŒŒì ¼ì „ í›”ì³ .""",
             "expert": """B사(192.168.10.5)다.
 웹사이트(80)에 직원 정보가 있을 거다. 그걸로 FTP(21)를 뚫어.
 FTP에 SSH 접속용 **비밀키(Key)**가 있다는데, 권한(Permission) 설정 조심하고.

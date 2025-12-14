@@ -4,9 +4,8 @@ import os
 from config import Color, init_system_settings
 from models import VirtualMachine
 from ui import draw_ui_box, type_print, show_logo, init_audio, play_sfx
-from data import setup_machines, get_stages_info, get_init_local_files
+import data
 from commands import process_command as run_command_logic
-import data # To access data in a clean way if needed
 
 class Game:
     def __init__(self):
@@ -20,6 +19,7 @@ class Game:
         self.is_connected = False
         self.remote_user = "ghost"
         self.mail_read = False
+        self.stage_email_opened = False
         
         self.sfx_success = init_audio()
         self.machines = data.setup_machines()
@@ -36,30 +36,34 @@ class Game:
         s = self.stages_info[self.stage_idx]
         body = s['beginner'] if self.difficulty == "beginner" else s['expert']
         
-        # 최초 확인 시
-        if not self.mail_read:
+        # 최초 확인 시: 전체 화면 전환
+        if not self.stage_email_opened:
             os.system('cls' if os.name == 'nt' else 'clear')
             print(Color.CYAN + "╔═══════════════════════════════════════════════════════════════╗")
             print(f"║ {Color.YELLOW}ENCRYPTED MESSAGE RECEIVED{Color.CYAN}".center(72))
             print("╠═══════════════════════════════════════════════════════════════╣")
-            print(f"║ FROM: {s['email_sender']}".ljust(63) + "║")
-            print(f"║ SUBJ: {s['email_sub']}".ljust(63) + "║")
+            print(f"║ FROM: {s.get('email_sender', 'UNKNOWN')}".ljust(63) + "║")
+            print(f"║ SUBJ: {s.get('email_sub', 'NO SUBJECT')}".ljust(63) + "║")
             print("╚═══════════════════════════════════════════════════════════════╝" + Color.RESET)
             print("\n" + Color.WHITE + "Decrypting: ", end=""); time.sleep(0.5); print("[OK]" + Color.RESET + "\n")
             type_print(body, Color.WHITE, 0.02)
             self.mail_read = True
+            self.stage_email_opened = True
             input(f"\n{Color.GREEN}[Press Enter]{Color.RESET}")
             os.system('cls' if os.name == 'nt' else 'clear')
             self.print_prompt_header()
+        
+        # 재확인 시: 인라인 텍스트 출력
         else:
             print(f"\n{Color.YELLOW}=== MISSION RECAP ==={Color.RESET}")
+            print(f"{Color.CYAN}Target: {s.get('target', 'UNKNOWN')}{Color.RESET}")
             print(body)
             print(Color.YELLOW + "="*20 + Color.RESET)
 
     def print_prompt_header(self):
         s = self.stages_info[self.stage_idx]
         self.draw_ui_box([
-            f"Target: {s['target']}",
+            f"Target: {s.get('target', 'UNKNOWN')}",
             f"Trace: {self.trace_rate:.1f}% | Money: ${self.money}"
         ], title=" ACTIVE SESSION ")
 
@@ -77,26 +81,28 @@ class Game:
     def check_mission(self, target, action):
         s = self.stages_info[self.stage_idx]
         done = False
-        if action == "steal" and target == s['goal']: done = True
-        elif action == "decrypt" and target == s['goal']: done = True
-        elif action == "shred" and target == s['goal']: done = True
+        if action == "steal" and target == s.get('goal'): done = True
+        elif action == "decrypt" and target == s.get('goal'): done = True
+        elif action == "shred" and target == s.get('goal'): done = True
         elif action == "webcam": done = True
         
         if done:
             self.complete_stage()
 
     def complete_stage(self):
-        r = self.stages_info[self.stage_idx]['reward']
-        news = self.stages_info[self.stage_idx]['news']
+        r = self.stages_info[self.stage_idx].get('reward', 0)
+        news = self.stages_info[self.stage_idx].get('news', '')
         self.money += r
         self.play_sfx("success")
         
         self.draw_ui_box([f"Mission Accomplished!", f"Reward: ${r}"], title=" SUCCESS ", color=Color.CYAN)
-        print("\n" + Color.YELLOW + "[NEWS] " + news + Color.RESET)
+        if news:
+            print("\n" + Color.YELLOW + "[NEWS] " + news + Color.RESET)
             
         input("\nPress Enter...")
         self.stage_idx += 1; self.is_connected = False; self.current_vm = self.local_vm; self.trace_rate = 0
-        self.mail_read = False
+        self.mail_read = False; self.stage_email_opened = False
+        
         if self.stage_idx < len(self.stages_info): 
             print(f"\n{Color.YELLOW}New mail from J. Type 'email'.{Color.RESET}")
         else: print(f"\n{Color.GREEN}*** ALL CLEAR ***{Color.RESET}"); sys.exit()
@@ -129,6 +135,4 @@ if __name__ == "__main__":
             print("\nTerminated.")
             break
         except Exception as e:
-            # For debugging, maybe print the error?
-            # print(f"Error: {e}")
             pass

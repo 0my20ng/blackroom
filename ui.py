@@ -3,7 +3,6 @@ import time
 import os
 from config import Color, AUDIO_AVAILABLE
 
-# Try importing pygame for type hinting mostly, actual check is via AUDIO_AVAILABLE
 try:
     import pygame
 except ImportError:
@@ -50,9 +49,9 @@ def show_logo():
  |  _  // _ \ / _ \| __|    | |    / __|/ __/ _ \/ __| 
  | | \ \ (_) | (_) | |_     | |____\__ \ (_|  __/\__ \ 
  |_|  \_\___/ \___/ \__|    |______|___/\___\___||___/ 
-                                           v8.0
+                                           v8.1
     """ + Color.RESET)
-    print(f"{Color.CYAN}       Connection Established... Target Acquired.{Color.RESET}\n")
+    print(f"{Color.CYAN}       Connection Established... Tutorial Restored.{Color.RESET}\n")
 
 def init_audio():
     sfx_success = None

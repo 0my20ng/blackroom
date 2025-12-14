@@ -21,5 +21,5 @@ class Color:
 def init_system_settings():
     os.system('') 
     if os.name == 'nt':
-        os.system('title ROOT_ACCESS_TERMINAL_v8.0')
+        os.system('title ROOT_ACCESS_TERMINAL_v8.1_TUTORIAL_RESTORED')
         os.system('color 0A')
